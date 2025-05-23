@@ -142,7 +142,9 @@ namespace Cursak
             {
                 return;
             }
-            if (textForDisplay.Text == "0" || enterValue || _specialDecimalDisplayString != null)
+
+
+            if ((textForDisplay.Text == "0" || enterValue || _specialDecimalDisplayString != null) && textForDisplay.Text != "-" )
             {
                 textForDisplay.Text = string.Empty;
                 _specialDecimalDisplayString = null;
