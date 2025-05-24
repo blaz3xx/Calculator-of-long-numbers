@@ -9,21 +9,74 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Windows.Forms;
 
-
 namespace Cursak
 {
+    /// <summary>
+    /// Головна форма калькулятора. Відповідає за обробку вводу користувача,
+    /// виконання математичних операцій з довгими цілими числами та відображення результатів.
+    /// </summary>
     public partial class Calculator : Form
     {
+        /// <summary>
+        /// Прапор, що вказує, чи було щойно введено значення (наприклад, після натискання оператора).
+        /// Якщо true, наступне введення цифри очистить дисплей перед додаванням нової цифри.
+        /// </summary>
         bool enterValue = false;
+
+        /// <summary>
+        /// Перший операнд для бінарних операцій. Зберігає значення після натискання кнопки оператора.
+        /// Тип даних: LongInteger - клас для роботи з довгими цілими числами.
+        /// </summary>
         private LongInteger operand1 = LongInteger.Zero;
+
+        /// <summary>
+        /// Рядок, що зберігає математичну операцію, яка очікує на виконання (+, -, ×, ÷, ^).
+        /// Тип даних: string.
+        /// </summary>
         private string pendingOperation = string.Empty;
+
+        /// <summary>
+        /// Ім'я файлу для ведення журналу обчислень.
+        /// Тип даних: const string.
+        /// </summary>
         private const string LogFilePath = "calculation_log.txt";
+
+        /// <summary>
+        /// Рядок, що містить дозволені для введення символи (цифри).
+        /// Тип даних: readonly string.
+        /// </summary>
         private readonly string _allowed = "0123456789";
 
+        /// <summary>
+        /// Спеціальний рядок для відображення результату ділення з десятковою частиною.
+        /// Якщо null, відображається стандартне ціле число.
+        /// Тип даних: string.
+        /// </summary>
         private string _specialDecimalDisplayString = null;
+
+        /// <summary>
+        /// Кількість знаків після коми для операції ділення.
+        /// Тип даних: const int.
+        /// </summary>
         private const int DecimalPrecision = 5;
 
-        // Конструктор: Ініціалізує форму калькулятора, встановлює початковий дисплей.
+        /// <summary>
+        /// Максимальна кількість цифр, яку можна ввести на дисплей.
+        /// Тип даних: const int.
+        /// </summary>
+        private const int MAX_DIGIT_COUNT = 150;
+
+        /// <summary>
+        /// Остання зафіксована позиція курсору миші для переміщення форми.
+        /// Тип даних: Point.
+        /// </summary>
+        Point lastPoint;
+
+        /// <summary>
+        /// Конструктор класу Calculator.
+        /// Ініціалізує компоненти форми, встановлює початкові значення для дисплеїв
+        /// та вмикає перехоплення подій клавіатури на рівні форми.
+        /// </summary>
         public Calculator()
         {
             InitializeComponent();
@@ -35,44 +88,48 @@ namespace Cursak
             {
                 secondaryDisplayLabel.Text = string.Empty;
             }
-            this.KeyPreview = true; // Вмикає перехоплення клавіатурних подій
+            this.KeyPreview = true;
         }
 
-        // Перемикає вікно між максимізованим і нормальним станом.
+        /// <summary>
+        /// Обробник події для кнопки "Розгорнути/Відновити".
+        /// Перемикає вікно між максимізованим і нормальним станом.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (кнопка).</param>
+        /// <param name="e">Аргументи події.</param>
         private void button1_Click(object sender, EventArgs e)
         {
-            if (this.WindowState == FormWindowState.Maximized)
-            {
-                this.WindowState = FormWindowState.Normal;
-            }
-            else
-            {
-                this.WindowState = FormWindowState.Maximized;
-            }
+            this.WindowState = (this.WindowState == FormWindowState.Maximized) ? FormWindowState.Normal : FormWindowState.Maximized;
         }
 
-        // Мінімізує вікно.
+        /// <summary>
+        /// Обробник події для кнопки "Згорнути".
+        /// Мінімізує вікно калькулятора.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (кнопка).</param>
+        /// <param name="e">Аргументи події.</param>
         private void button2_Click(object sender, EventArgs e)
         {
             this.WindowState = FormWindowState.Minimized;
         }
 
-        // Закриває форму.
+        /// <summary>
+        /// Обробник події для кнопки "Закрити".
+        /// Закриває форму калькулятора.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (кнопка).</param>
+        /// <param name="e">Аргументи події.</param>
         private void buttonWxit_Click(object sender, EventArgs e)
         {
             this.Close();
-
-        }
-        private void panelHistory_Paint(object sender, PaintEventArgs e)
-        {
-
-        }
-        private void textDisplay1_TextChanged(object sender, EventArgs e)
-        {
         }
 
-        Point lastPoint;
-        // Переміщує форму при натиснутій лівій кнопці миші.
+        /// <summary>
+        /// Обробник події переміщення миші по формі.
+        /// Переміщує вікно, якщо затиснута ліва кнопка миші.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (форма).</param>
+        /// <param name="e">Аргументи події миші, що містять координати.</param>
         private void Form1_MouseMove(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -82,39 +139,60 @@ namespace Cursak
             }
         }
 
-        // Переміщує форму при натиснутій лівій кнопці миші.
+        /// <summary>
+        /// Обробник події натискання кнопки миші на формі.
+        /// Зберігає початкову позицію курсору для подальшого переміщення вікна.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (форма).</param>
+        /// <param name="e">Аргументи події миші.</param>
         private void Form1_MouseDown(object sender, MouseEventArgs e)
         {
             lastPoint = new Point(e.X, e.Y);
         }
 
-        // Переміщує форму при натиснутій лівій кнопці миші.
+        /// <summary>
+        /// Обробник події натискання кнопки миші на дисплеї.
+        /// Зберігає початкову позицію курсору для подальшого переміщення вікна.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (дисплей).</param>
+        /// <param name="e">Аргументи події миші.</param>
         private void textDisplay1_MouseDown(object sender, MouseEventArgs e)
         {
             lastPoint = new Point(e.X, e.Y);
         }
 
-
-        private void textDisplay1_MouseEnter(object sender, EventArgs e)
-        {
-
-        }
-
-        // Видаляє останній символ з дисплея.
+        /// <summary>
+        /// Обробник події для кнопки "Backspace" (⌫).
+        /// Видаляє останній символ з головного дисплея. Якщо дисплей стає порожнім, встановлює "0".
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void buttonCancel_Click(object sender, EventArgs e)
         {
             if (textForDisplay.Text.Length > 0)
                 textForDisplay.Text = textForDisplay.Text.Remove(textForDisplay.Text.Length - 1, 1);
-            if (textForDisplay.Text == string.Empty)
+            if (string.IsNullOrEmpty(textForDisplay.Text))
                 textForDisplay.Text = "0";
         }
-        // Скидає дисплей до нуля.
+
+        /// <summary>
+        /// Обробник події для кнопки "CE" (Clear Entry).
+        /// Скидає поточне введене число на дисплеї до "0".
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void myOwnButton9_Click(object sender, EventArgs e)
         {
             textForDisplay.Text = "0";
             _specialDecimalDisplayString = null;
         }
-        // Скидає всі значення калькулятора.
+
+        /// <summary>
+        /// Обробник події для кнопки "C" (Clear).
+        /// Повністю скидає стан калькулятора: очищує дисплеї, операнди та операції, що очікують.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void myOwnButton8_Click(object sender, EventArgs e)
         {
             textForDisplay.Text = "0";
@@ -125,42 +203,40 @@ namespace Cursak
             _specialDecimalDisplayString = null;
         }
 
-
-        private const int MAX_DIGIT_COUNT = 150;
-        // Додає цифру до дисплея.
+        /// <summary>
+        /// Обробник події для кнопок з цифрами (0-9).
+        /// Додає відповідну цифру до числа на головному дисплеї.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (кнопка з цифрою).</param>
+        /// <param name="e">Аргументи події.</param>
         private void BtnNum_Click(object sender, EventArgs e)
         {
-            MyOwnButton clickedButton = sender as MyOwnButton;
+            if (sender is MyOwnButton clickedButton)
+            {
+                string digitToAppend = clickedButton.Text;
 
-            if (clickedButton == null)
-            {
-                return;
-            }
+                if ((textForDisplay.Text == "0" || enterValue || _specialDecimalDisplayString != null) && textForDisplay.Text != "-")
+                {
+                    textForDisplay.Text = string.Empty;
+                    _specialDecimalDisplayString = null;
+                }
+                enterValue = false;
 
-            string digitToAppend = clickedButton.Text;
-            if (string.IsNullOrEmpty(digitToAppend) || digitToAppend.Length != 1 || !char.IsDigit(digitToAppend[0]))
-            {
-                return;
-            }
-
-
-            if ((textForDisplay.Text == "0" || enterValue || _specialDecimalDisplayString != null) && textForDisplay.Text != "-" )
-            {
-                textForDisplay.Text = string.Empty;
-                _specialDecimalDisplayString = null;
-            }
-            enterValue = false;
-            if (textForDisplay.Text.Length < MAX_DIGIT_COUNT)
-            {
-                textForDisplay.Text += digitToAppend;
-            }
-            else
-            {
-                System.Media.SystemSounds.Beep.Play();
+                if (textForDisplay.Text.Length < MAX_DIGIT_COUNT)
+                {
+                    textForDisplay.Text += digitToAppend;
+                }
+                else
+                {
+                    System.Media.SystemSounds.Beep.Play();
+                }
             }
         }
 
-        // Виконує обчислення залежно від операції.
+        /// <summary>
+        /// Виконує математичну операцію, що очікує, використовуючи operand1 та поточне значення на дисплеї як operand2.
+        /// Обробляє різні операції (+, -, *, /, ^, !) та можливі помилки (ділення на нуль, некоректний формат).
+        /// </summary>
         private void PerformCalculation()
         {
             if (string.IsNullOrEmpty(pendingOperation) || this.textForDisplay == null)
@@ -347,7 +423,13 @@ namespace Cursak
             }
         }
 
-        // Скидає стан калькулятора при помилці.
+
+        /// <summary>
+        /// Скидає стан калькулятора у випадку виникнення помилки обчислення або парсингу.
+        /// Відображає повідомлення про помилку на головному дисплеї.
+        /// </summary>
+        /// <param name="isParsingError">Прапор, що вказує, чи сталася помилка при перетворенні рядка в число.</param>
+        /// <param name="displaySpecificError">Спеціальний рядок помилки для відображення.</param>
         private void ResetCalculatorStateOnError(bool isParsingError = false, string displaySpecificError = null)
         {
             if (this.textForDisplay == null)
@@ -378,7 +460,12 @@ namespace Cursak
             enterValue = true;
         }
 
-        // Виконує обчислення при натисканні кнопки "=".
+        /// <summary>
+        /// Обробник події для кнопки "=".
+        /// Ініціює виконання фінального обчислення.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void ButtonEqual_Click(object sender, EventArgs e)
         {
             if (string.IsNullOrEmpty(pendingOperation) || textForDisplay == null || secondaryDisplayLabel == null)
@@ -430,7 +517,12 @@ namespace Cursak
             _specialDecimalDisplayString = null;
         }
 
-        // Обробляє натискання математичних операцій.
+        /// <summary>
+        /// Обробник події для кнопок математичних операцій (+, -, ×, ÷, ^, !).
+        /// Встановлює операцію, що очікує, та готує калькулятор до введення другого операнда.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію (кнопка операції).</param>
+        /// <param name="e">Аргументи події миші.</param>
         private void buttonMathOperations(object sender, MouseEventArgs e)
         {
             MyOwnButton clickedOperatorButton = sender as MyOwnButton;
@@ -523,7 +615,13 @@ namespace Cursak
             enterValue = true;
         }
 
-        // Фільтрує недозволені символи при введенні з клавіатури.
+
+        /// <summary>
+        /// Обробник події натискання клавіш на клавіатурі для головного дисплея.
+        /// Фільтрує введення, дозволяючи лише цифри.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події натискання клавіші.</param>
         private void DisplayKeyPress(object sender, KeyPressEventArgs e)
         {
             if (!char.IsControl(e.KeyChar) && !char.IsDigit(e.KeyChar))
@@ -532,7 +630,12 @@ namespace Cursak
             }
         }
 
-        // Обробляє введення з клавіатури (цифри та Backspace).
+        /// <summary>
+        /// Обробник події натискання клавіш на рівні форми.
+        /// Дозволяє вводити цифри та використовувати Backspace для редагування числа на дисплеї.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події натискання клавіші.</param>
         private void Form1_KeyPress(object sender, KeyPressEventArgs e)
         {
 
@@ -565,19 +668,34 @@ namespace Cursak
             e.Handled = true;
         }
 
-        // Перемикає видимість панелі історії.
+        /// <summary>
+        /// Обробник події для кнопки "Історія".
+        /// Перемикає видимість панелі з історією обчислень.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void buttonHistory_Click(object sender, EventArgs e)
         {
             panelHistory.Height = (panelHistory.Height == 5) ? panelHistory.Height = 450 : 5;
         }
 
-        // Очищає історію обчислень.
+        /// <summary>
+        /// Обробник події для кнопки "Очистити історію".
+        /// Видаляє весь текст з панелі історії.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void BtnClearHistory(object sender, EventArgs e)
         {
             panelForHistory.Clear();
         }
 
-        // Відкриває файл логу.
+        /// <summary>
+        /// Обробник події для кнопки "Меню" (відкриття журналу).
+        /// Відкриває файл журналу `calculation_log.txt` у стандартному текстовому редакторі.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void buttonMenu_Click(object sender, EventArgs e)
         {
             if (File.Exists(LogFilePath))
@@ -594,7 +712,15 @@ namespace Cursak
             }
         }
 
-        // Генерує дробовий рядок для результату ділення.
+        /// <summary>
+        /// Генерує рядкове представлення результату ділення з десятковою частиною.
+        /// Обчислює знаки після коми з заданою точністю.
+        /// </summary>
+        /// <param name="originalDividend">Початкове ділене (тип LongInteger).</param>
+        /// <param name="originalDivisor">Початковий дільник (тип LongInteger).</param>
+        /// <param name="actualQuotient">Обчислена ціла частина від ділення (тип LongInteger).</param>
+        /// <param name="actualRemainder">Обчислена остача від ділення (тип LongInteger).</param>
+        /// <returns>Рядок, що представляє результат ділення з десятковою точкою.</returns>
         private string GenerateDecimalStringForDivision(
             LongInteger originalDividend,
             LongInteger originalDivisor,
@@ -653,7 +779,12 @@ namespace Cursak
             return sbDisplay.ToString();
         }
 
-        // Змінює знак числа на дисплеї.
+        /// <summary>
+        /// Обробник події для кнопки "+/-".
+        /// Змінює знак числа, відображеного на головному дисплеї.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void myOwnButton1_Click(object sender, EventArgs e)
         {
             if (textForDisplay.Text == "Помилка" ||
@@ -696,13 +827,17 @@ namespace Cursak
             }
         }
 
-        //Функція для вставки числа з буфера обміну
+        /// <summary>
+        /// Обробник події натискання комбінації клавіш на рівні форми.
+        /// Реалізує вставку числа з буфера обміну за допомогою Ctrl+V.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події клавіатури.</param>
         private void Calculator_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.Control && e.KeyCode == Keys.V)
             {
                 string clipboardText = Clipboard.GetText().Trim();
-                // Перевіряємо, що це рядок виду "-123" або "456"
                 if (IsNumberString(clipboardText))
                 {
                     textForDisplay.Text = clipboardText;
@@ -715,10 +850,14 @@ namespace Cursak
                 e.SuppressKeyPress = true;
             }
         }
-        // Перевіряє, чи рядок є числом (цілим або з мінусом на початку).
+        /// <summary>
+        /// Перевіряє, чи є вхідний рядок представленням цілого числа.
+        /// Допускаються лише цифри та один мінус на початку рядка.
+        /// </summary>
+        /// <param name="input">Рядок для перевірки.</param>
+        /// <returns><c>true</c>, якщо рядок є коректним числовим представленням; інакше <c>false</c>.</returns>
         private bool IsNumberString(string input)
         {
-            // Дозволяємо рядки, що складаються тільки з цифр або мають один мінус на початку
             if (string.IsNullOrEmpty(input)) return false;
 
             if (input[0] == '-')
@@ -726,6 +865,9 @@ namespace Cursak
             else
                 return input.All(char.IsDigit);
         }
+
+        private void panelHistory_Paint(object sender, PaintEventArgs e) { }
+        private void textDisplay1_TextChanged(object sender, EventArgs e) { }
+        private void textDisplay1_MouseEnter(object sender, EventArgs e) { }
     }
 }
-

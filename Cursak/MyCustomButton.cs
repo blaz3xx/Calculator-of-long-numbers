@@ -1,24 +1,42 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace CustomButton
 {
+    /// <summary>
+    /// Представляє кастомну кнопку з можливістю налаштування заокруглених кутів та рамки.
+    /// Успадковує функціональність стандартного класу <see cref="Button"/>.
+    /// </summary>
     class MyOwnButton : Button
     {
+        // --- ІДЕНТИФІКАТОРИ (ЗМІННІ) ---
 
-        //Fields
+        /// <summary>
+        /// Товщина рамки кнопки в пікселях.
+        /// Тип даних: int.
+        /// </summary>
         private int borderSize = 0;
+
+        /// <summary>
+        /// Радіус заокруглення кутів кнопки в пікселях.
+        /// Тип даних: int.
+        /// </summary>
         private int borderRadius = 50;
+
+        /// <summary>
+        /// Колір рамки кнопки.
+        /// Тип даних: Color.
+        /// </summary>
         private Color borderColor = Color.DodgerBlue;
 
+        // --- ВЛАСТИВОСТІ ---
 
-        //Properties
+        /// <summary>
+        /// Отримує або встановлює товщину рамки кнопки.
+        /// При встановленні нового значення кнопка перемальовується.
+        /// </summary>
         public int BorderSize
         {
             get { return borderSize; }
@@ -29,6 +47,10 @@ namespace CustomButton
             }
         }
 
+        /// <summary>
+        /// Отримує або встановлює радіус заокруглення кутів.
+        /// Значення не може перевищувати висоту кнопки.
+        /// </summary>
         public int BorderRadius
         {
             get { return borderRadius; }
@@ -39,17 +61,32 @@ namespace CustomButton
             }
         }
 
+        /// <summary>
+        /// Отримує або встановлює колір фону кнопки.
+        /// Є обгорткою для властивості <see cref="Button.BackColor"/>.
+        /// </summary>
         public Color BackgroundColor
         {
-            get => BackColor; set { BackColor = value; }
+            get => BackColor;
+            set { BackColor = value; }
         }
 
+        /// <summary>
+        /// Отримує або встановлює колір тексту кнопки.
+        /// Є обгорткою для властивості <see cref="Button.ForeColor"/>.
+        /// </summary>
         public Color TextColor
         {
-            get => ForeColor; set { ForeColor = value; }
+            get => ForeColor;
+            set { ForeColor = value; }
         }
 
-        //Constructor
+        // --- КОНСТРУКТОР ---
+
+        /// <summary>
+        /// Ініціалізує новий екземпляр класу <see cref="MyOwnButton"/>
+        /// зі стандартними налаштуваннями зовнішнього вигляду.
+        /// </summary>
         public MyOwnButton()
         {
             Size = new Size(200, 100);
@@ -61,8 +98,14 @@ namespace CustomButton
             Resize += new EventHandler(Button_Resize);
         }
 
-        //Methods
+        // --- МЕТОДИ ---
 
+        /// <summary>
+        /// Обробник події зміни розміру кнопки. Коригує радіус заокруглення,
+        /// якщо він перевищує нову висоту кнопки.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void Button_Resize(object sender, EventArgs e)
         {
             if (borderRadius > Height)
@@ -71,6 +114,12 @@ namespace CustomButton
             }
         }
 
+        /// <summary>
+        /// Створює графічний шлях (GraphicsPath) у формі прямокутника із заокругленими кутами.
+        /// </summary>
+        /// <param name="rectangle">Прямокутник, для якого створюється шлях.</param>
+        /// <param name="radius">Радіус заокруглення кутів.</param>
+        /// <returns>Об'єкт <see cref="GraphicsPath"/> із заокругленою фігурою.</returns>
         private GraphicsPath GetFigurePath(RectangleF rectangle, float radius)
         {
             GraphicsPath graphicsPath = new GraphicsPath();
@@ -84,6 +133,11 @@ namespace CustomButton
             return graphicsPath;
         }
 
+        /// <summary>
+        /// Перевизначений метод для малювання елемента керування.
+        /// Відповідає за кастомний рендеринг кнопки з урахуванням заокруглення та рамки.
+        /// </summary>
+        /// <param name="pevent">Аргументи події малювання, що містять поверхню для малювання.</param>
         protected override void OnPaint(PaintEventArgs pevent)
         {
             base.OnPaint(pevent);
@@ -122,12 +176,24 @@ namespace CustomButton
                 }
             }
         }
+
+        /// <summary>
+        /// Викликається при створенні дескриптора елемента керування.
+        /// Підписується на подію зміни кольору фону батьківського контейнера.
+        /// </summary>
+        /// <param name="e">Аргументи події.</param>
         protected override void OnHandleCreated(EventArgs e)
         {
             base.OnHandleCreated(e);
             Parent.BackColorChanged += new EventHandler(Container_BackColorChanged);
         }
 
+        /// <summary>
+        /// Обробник події зміни кольору фону батьківського контейнера.
+        /// Перемальовує кнопку для уникнення візуальних артефактів, особливо в режимі дизайнера.
+        /// </summary>
+        /// <param name="sender">Об'єкт, що викликав подію.</param>
+        /// <param name="e">Аргументи події.</param>
         private void Container_BackColorChanged(object sender, EventArgs e)
         {
             if (DesignMode)
@@ -135,8 +201,5 @@ namespace CustomButton
                 this.Invalidate();
             }
         }
-
-
-
     }
 }

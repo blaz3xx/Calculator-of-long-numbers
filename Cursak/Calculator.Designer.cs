@@ -41,6 +41,7 @@
             this.buttonHistory = new System.Windows.Forms.Button();
             this.secondaryDisplayLabel = new System.Windows.Forms.TextBox();
             this.textForDisplay = new System.Windows.Forms.TextBox();
+            this.calculationProgressbar = new System.Windows.Forms.ProgressBar();
             this.buttonDegree = new CustomButton.MyOwnButton();
             this.Btn0 = new CustomButton.MyOwnButton();
             this.buttonFactorial = new CustomButton.MyOwnButton();
@@ -257,6 +258,14 @@
             this.textForDisplay.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.DisplayKeyPress);
             this.textForDisplay.MouseDown += new System.Windows.Forms.MouseEventHandler(this.textDisplay1_MouseDown);
             this.textForDisplay.MouseEnter += new System.EventHandler(this.textDisplay1_MouseEnter);
+            // 
+            // calculationProgressbar
+            // 
+            this.calculationProgressbar.Location = new System.Drawing.Point(107, 113);
+            this.calculationProgressbar.Name = "calculationProgressbar";
+            this.calculationProgressbar.Size = new System.Drawing.Size(427, 129);
+            this.calculationProgressbar.TabIndex = 27;
+            this.calculationProgressbar.Visible = false;
             // 
             // buttonDegree
             // 
@@ -725,6 +734,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.None;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(32)))), ((int)(((byte)(32)))), ((int)(((byte)(32)))));
             this.ClientSize = new System.Drawing.Size(669, 728);
+            this.Controls.Add(this.calculationProgressbar);
             this.Controls.Add(this.panelHistory);
             this.Controls.Add(this.buttonDegree);
             this.Controls.Add(this.Btn0);
@@ -805,6 +815,7 @@
         private CustomButton.MyOwnButton Btn4;
         private CustomButton.MyOwnButton buttonMultiply;
         private CustomButton.MyOwnButton buttonToggleSign;
+        private System.Windows.Forms.ProgressBar calculationProgressbar;
     }
 }
 

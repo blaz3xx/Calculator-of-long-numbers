@@ -4,18 +4,62 @@ using System.Linq;
 using System.Text;
 using System.IO;
 
+/// <summary>
+/// Представляє ціле число довільної довжини.
+/// Цей клас забезпечує функціональність для зберігання та виконання арифметичних операцій
+/// над числами, які перевищують межі стандартних типів даних, таких як <see cref="long"/>.
+/// </summary>
 public class LongInteger : IComparable<LongInteger>
 {
+    /// <summary>
+    /// Внутрішнє сховище для цифр числа. Цифри зберігаються у зворотному порядку.
+    /// Наприклад, число 123 зберігається як {3, 2, 1}.
+    /// Тип даних: Список байтів.
+    /// </summary>
     private List<byte> _digits;
+
+    /// <summary>
+    /// Прапор, що вказує, чи є число від'ємним.
+    /// Тип даних: булеве значення.
+    /// </summary>
     private bool _isNegative;
+
+    /// <summary>
+    /// Отримує кількість ітерацій, виконаних під час останньої складної арифметичної операції.
+    /// Використовується для аналізу складності алгоритмів.
+    /// </summary>
     public static long LastOperationIterations { get; private set; }
 
+    /// <summary>
+    /// Представляє число нуль (0).
+    /// Тип даних: статичне поле тільки для читання.
+    /// </summary>
     public static readonly LongInteger Zero = new LongInteger("0");
+
+    /// <summary>
+    /// Представляє число один (1).
+    /// Тип даних: статичне поле тільки для читання.
+    /// </summary>
     public static readonly LongInteger One = new LongInteger("1");
+
+    /// <summary>
+    /// Представляє число мінус один (-1).
+    /// Тип даних: статичне поле тільки для читання.
+    /// </summary>
     public static readonly LongInteger MinusOne = new LongInteger("-1");
+
+    /// <summary>
+    /// Представляє число два (2). Використовується у внутрішніх обчисленнях.
+    /// Тип даних: приватне статичне поле тільки для читання.
+    /// </summary>
     private static readonly LongInteger Two = new LongInteger("2");
 
     #region Конструктори
+    /// <summary>
+    /// Ініціалізує новий екземпляр класу <see cref="LongInteger"/> з рядкового представлення числа.
+    /// </summary>
+    /// <param name="number">Рядок, що містить число (наприклад, "123" або "-456").</param>
+    /// <exception cref="ArgumentException">Виникає, якщо рядок порожній, null або містить некоректні символи.</exception>
     public LongInteger(string number)
     {
         if (string.IsNullOrEmpty(number))
@@ -51,6 +95,10 @@ public class LongInteger : IComparable<LongInteger>
         }
     }
 
+    /// <summary>
+    /// Ініціалізує новий екземпляр класу <see cref="LongInteger"/> з числа типу <see cref="long"/>.
+    /// </summary>
+    /// <param name="number">Число типу long для ініціалізації.</param>
     public LongInteger(long number)
     {
         _digits = new List<byte>();
@@ -86,6 +134,12 @@ public class LongInteger : IComparable<LongInteger>
         }
     }
 
+    /// <summary>
+    /// Приватний конструктор для внутрішнього використання. Створює екземпляр з існуючого списку цифр.
+    /// </summary>
+    /// <param name="newDigits">Список цифр у зворотному порядку.</param>
+    /// <param name="newIsNegative">Знак числа.</param>
+    /// <param name="skipNormalization">Прапор, що вказує, чи потрібно пропускати нормалізацію (видалення нулів).</param>
     private LongInteger(List<byte> newDigits, bool newIsNegative, bool skipNormalization = false)
     {
         this._digits = new List<byte>(newDigits);
@@ -101,6 +155,9 @@ public class LongInteger : IComparable<LongInteger>
     }
     #endregion
 
+    /// <summary>
+    /// Видаляє незначущі нулі з початку числа (з кінця списку _digits).
+    /// </summary>
     private void RemoveLeadingZeros()
     {
         if (_digits == null) return;
@@ -117,6 +174,10 @@ public class LongInteger : IComparable<LongInteger>
         }
     }
 
+    /// <summary>
+    /// Перетворює число <see cref="LongInteger"/> на його рядкове представлення.
+    /// </summary>
+    /// <returns>Рядок, що представляє поточне число.</returns>
     public override string ToString()
     {
         if (IsZero)
@@ -134,9 +195,21 @@ public class LongInteger : IComparable<LongInteger>
         return sb.ToString();
     }
 
+    /// <summary>
+    /// Отримує значення, яке вказує, чи є поточне число нулем.
+    /// </summary>
     public bool IsZero => _digits.Count == 1 && _digits[0] == 0 && !_isNegative;
 
     #region Порівняння
+    /// <summary>
+    /// Порівнює поточний екземпляр з іншим об'єктом <see cref="LongInteger"/>.
+    /// </summary>
+    /// <param name="other">Інше число для порівняння.</param>
+    /// <returns>
+    /// -1, якщо поточне число менше за <paramref name="other"/>.
+    /// 0, якщо вони рівні.
+    /// 1, якщо поточне число більше за <paramref name="other"/>.
+    /// </returns>
     public int CompareTo(LongInteger other)
     {
         if (other is null) return 1;
@@ -153,6 +226,12 @@ public class LongInteger : IComparable<LongInteger>
         return _isNegative ? -magnitudeComparison : magnitudeComparison;
     }
 
+    /// <summary>
+    /// Порівнює два числа за абсолютною величиною (модулем).
+    /// </summary>
+    /// <param name="d1">Список цифр першого числа.</param>
+    /// <param name="d2">Список цифр другого числа.</param>
+    /// <returns>Результат порівняння (-1, 0, 1).</returns>
     private static int CompareMagnitude(List<byte> d1, List<byte> d2)
     {
         long iterations = 0;
@@ -168,6 +247,12 @@ public class LongInteger : IComparable<LongInteger>
         return 0;
     }
 
+    /// <summary>
+    /// Визначає, чи рівні два екземпляри <see cref="LongInteger"/>.
+    /// </summary>
+    /// <param name="a">Перше число.</param>
+    /// <param name="b">Друге число.</param>
+    /// <returns><c>true</c>, якщо числа рівні; інакше <c>false</c>.</returns>
     public static bool operator ==(LongInteger a, LongInteger b)
     {
         if (ReferenceEquals(a, null))
@@ -176,28 +261,54 @@ public class LongInteger : IComparable<LongInteger>
         }
         return a.Equals(b);
     }
+
+    /// <summary>
+    /// Визначає, чи не рівні два екземпляри <see cref="LongInteger"/>.
+    /// </summary>
+    /// <param name="a">Перше число.</param>
+    /// <param name="b">Друге число.</param>
+    /// <returns><c>true</c>, якщо числа не рівні; інакше <c>false</c>.</returns>
     public static bool operator !=(LongInteger a, LongInteger b) => !(a == b);
+
+    /// <summary>
+    /// Визначає, чи є одне число <see cref="LongInteger"/> меншим за інше.
+    /// </summary>
     public static bool operator <(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
         return a.CompareTo(b) < 0;
     }
+
+    /// <summary>
+    /// Визначає, чи є одне число <see cref="LongInteger"/> меншим або рівним іншому.
+    /// </summary>
     public static bool operator <=(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
         return a.CompareTo(b) <= 0;
     }
+
+    /// <summary>
+    /// Визначає, чи є одне число <see cref="LongInteger"/> більшим за інше.
+    /// </summary>
     public static bool operator >(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
         return a.CompareTo(b) > 0;
     }
+
+    /// <summary>
+    /// Визначає, чи є одне число <see cref="LongInteger"/> більшим або рівним іншому.
+    /// </summary>
     public static bool operator >=(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
         return a.CompareTo(b) >= 0;
     }
 
+    /// <summary>
+    /// Визначає, чи дорівнює поточний об'єкт іншому об'єкту.
+    /// </summary>
     public override bool Equals(object obj)
     {
         if (obj is null) return false;
@@ -210,6 +321,10 @@ public class LongInteger : IComparable<LongInteger>
         return _isNegative == other._isNegative && _digits.SequenceEqual(other._digits);
     }
 
+    /// <summary>
+    /// Повертає абсолютне значення (модуль) числа.
+    /// </summary>
+    /// <returns>Новий екземпляр <see cref="LongInteger"/>, що є абсолютним значенням поточного.</returns>
     public LongInteger Abs()
     {
         if (IsZero) return Zero;
@@ -219,6 +334,12 @@ public class LongInteger : IComparable<LongInteger>
 
     #region Арифметичні операції
 
+    /// <summary>
+    /// Додає два числа <see cref="LongInteger"/>.
+    /// </summary>
+    /// <param name="a">Перший доданок.</param>
+    /// <param name="b">Другий доданок.</param>
+    /// <returns>Сума двох чисел.</returns>
     public static LongInteger operator +(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
@@ -248,6 +369,9 @@ public class LongInteger : IComparable<LongInteger>
         }
     }
 
+    /// <summary>
+    /// Додає абсолютні величини двох чисел.
+    /// </summary>
     private static List<byte> AddMagnitude(List<byte> d1, List<byte> d2)
     {
         long iterations = 0;
@@ -275,6 +399,12 @@ public class LongInteger : IComparable<LongInteger>
         return result;
     }
 
+    /// <summary>
+    /// Віднімає одне число <see cref="LongInteger"/> від іншого.
+    /// </summary>
+    /// <param name="a">Зменшуване.</param>
+    /// <param name="b">Від'ємник.</param>
+    /// <returns>Різниця двох чисел.</returns>
     public static LongInteger operator -(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
@@ -283,6 +413,9 @@ public class LongInteger : IComparable<LongInteger>
         return a + negativeB;
     }
 
+    /// <summary>
+    /// Віднімає абсолютну величину меншого числа від більшого.
+    /// </summary>
     private static List<byte> SubtractMagnitude(List<byte> d1, List<byte> d2)
     {
         long iterations = 0;
@@ -312,6 +445,12 @@ public class LongInteger : IComparable<LongInteger>
         return result;
     }
 
+    /// <summary>
+    /// Множить два числа <see cref="LongInteger"/>, використовуючи алгоритм Карацуби для великих чисел.
+    /// </summary>
+    /// <param name="a">Перший множник.</param>
+    /// <param name="b">Другий множник.</param>
+    /// <returns>Добуток двох чисел.</returns>
     public static LongInteger operator *(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
@@ -335,6 +474,9 @@ public class LongInteger : IComparable<LongInteger>
         }
     }
 
+    /// <summary>
+    /// Множить абсолютні величини двох чисел стандартним методом "у стовпчик".
+    /// </summary>
     private static List<byte> StandardMultiplyMagnitude(List<byte> d1, List<byte> d2)
     {
         long iterations = 0;
@@ -375,6 +517,12 @@ public class LongInteger : IComparable<LongInteger>
         return finalResult;
     }
 
+    /// <summary>
+    /// Рекурсивно множить два додатні числа <see cref="LongInteger"/> за алгоритмом Карацуби.
+    /// </summary>
+    /// <param name="x">Перший множник (додатний).</param>
+    /// <param name="y">Другий множник (додатний).</param>
+    /// <returns>Добуток чисел.</returns>
     private static LongInteger KaratsubaMultiply(LongInteger x, LongInteger y)
     {
         if (x._isNegative || y._isNegative)
@@ -414,18 +562,35 @@ public class LongInteger : IComparable<LongInteger>
         return finalResult;
     }
 
+    /// <summary>
+    /// Повертає молодшу частину числа для алгоритму Карацуби.
+    /// </summary>
+    /// <param name="m">Кількість цифр для взяття.</param>
+    /// <returns>Молодша частина числа.</returns>
     private LongInteger SplitLow(int m)
     {
         if (m <= 0) return Zero;
         if (m >= _digits.Count) return new LongInteger(new List<byte>(_digits), false, true);
         return new LongInteger(_digits.Take(m).ToList(), false, true);
     }
+
+    /// <summary>
+    /// Повертає старшу частину числа для алгоритму Карацуби.
+    /// </summary>
+    /// <param name="m">Позиція для розділення.</param>
+    /// <returns>Старша частина числа.</returns>
     private LongInteger SplitHigh(int m)
     {
         if (m <= 0) return new LongInteger(new List<byte>(_digits), _isNegative, true);
         if (m >= _digits.Count) return Zero;
         return new LongInteger(_digits.Skip(m).ToList(), false, true);
     }
+
+    /// <summary>
+    /// Зсуває число вліво на <paramref name="m"/> позицій (еквівалентно множенню на 10^m).
+    /// </summary>
+    /// <param name="m">Кількість позицій для зсуву.</param>
+    /// <returns>Зсунуте число.</returns>
     private LongInteger ShiftLeft(int m)
     {
         if (IsZero || m == 0) return this;
@@ -441,17 +606,37 @@ public class LongInteger : IComparable<LongInteger>
     }
 
 
+    /// <summary>
+    /// Виконує цілочисельне ділення двох чисел <see cref="LongInteger"/>.
+    /// </summary>
+    /// <param name="a">Ділене.</param>
+    /// <param name="b">Дільник.</param>
+    /// <returns>Частка від ділення.</returns>
     public static LongInteger operator /(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
         return DivideAndModulo(a, b).quotient;
     }
+
+    /// <summary>
+    /// Обчислює остачу від ділення двох чисел <see cref="LongInteger"/>.
+    /// </summary>
+    /// <param name="a">Ділене.</param>
+    /// <param name="b">Дільник.</param>
+    /// <returns>Остача від ділення.</returns>
     public static LongInteger operator %(LongInteger a, LongInteger b)
     {
         if (a is null || b is null) throw new ArgumentNullException(a is null ? "a" : "b");
         return DivideAndModulo(a, b).remainder;
     }
 
+    /// <summary>
+    /// Виконує ділення і повертає частку та остачу.
+    /// </summary>
+    /// <param name="dividend">Ділене.</param>
+    /// <param name="divisor">Дільник.</param>
+    /// <returns>Кортеж, що містить частку (quotient) та остачу (remainder).</returns>
+    /// <exception cref="DivideByZeroException">Виникає при діленні на нуль.</exception>
     public static (LongInteger quotient, LongInteger remainder) DivideAndModulo(LongInteger dividend, LongInteger divisor)
     {
         long iterations = 0;
@@ -468,11 +653,9 @@ public class LongInteger : IComparable<LongInteger>
         LongInteger absDividend = dividend.Abs();
         LongInteger absDivisor = divisor.Abs();
 
-        long comparisonIterations = 0; 
-        if (absDividend < absDivisor) 
+        if (absDividend < absDivisor)
         {
-            comparisonIterations = LastOperationIterations;
-            LastOperationIterations = comparisonIterations;
+            LastOperationIterations = LastOperationIterations;
             return (Zero, new LongInteger(new List<byte>(dividend._digits), dividend._isNegative, true));
         }
 
@@ -516,6 +699,13 @@ public class LongInteger : IComparable<LongInteger>
         return (finalQuotient, finalRemainder);
     }
 
+    /// <summary>
+    /// Підносить число <see cref="LongInteger"/> до степеня.
+    /// </summary>
+    /// <param name="baseVal">Основа.</param>
+    /// <param name="exponent">Показник степеня (невід'ємний).</param>
+    /// <returns>Результат піднесення до степеня.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Виникає, якщо показник степеня від'ємний або обчислення є надто складним.</exception>
     public static LongInteger Pow(LongInteger baseVal, LongInteger exponent)
     {
         long iterations = 0;
@@ -532,29 +722,6 @@ public class LongInteger : IComparable<LongInteger>
         {
             LastOperationIterations = iterations;
             return exponent.IsEven() ? One : MinusOne;
-        }
-
-
-        int exponentIntValue;
-        try
-        {
-            exponentIntValue = int.Parse(exponent.ToString());
-        }
-        catch (Exception ex)
-        {
-            throw new InvalidOperationException("Внутрішня помилка при конвертації показника степеня. Степінь має бути в межах від 0 до 2147483647", ex);
-        }
-
-        const long COMPUTATIONAL_COMPLEXITY_THRESHOLD = 500000;
-
-        if (baseVal.Abs() > One)
-        {
-            long estimatedComplexity = (long)baseVal._digits.Count * exponentIntValue;
-            if (estimatedComplexity > COMPUTATIONAL_COMPLEXITY_THRESHOLD)
-            {
-                throw new ArgumentOutOfRangeException(nameof(exponent),
-                    $"Обчислення {baseVal.ToString()} ^ {exponent.ToString()} оцінюється як надто складне або призведе до надто великого результату (фактор складності: {estimatedComplexity} > {COMPUTATIONAL_COMPLEXITY_THRESHOLD}). Зменшіть основу або показник степеня.");
-            }
         }
 
         LongInteger result = One;
@@ -578,17 +745,32 @@ public class LongInteger : IComparable<LongInteger>
         return result;
     }
 
+    /// <summary>
+    /// Перевіряє, чи є число парним.
+    /// </summary>
+    /// <returns><c>true</c>, якщо число парне; інакше <c>false</c>.</returns>
     private bool IsEven()
     {
         if (IsZero) return true;
         return (_digits[0] % 2 == 0);
     }
+
+    /// <summary>
+    /// Перевіряє, чи є число непарним.
+    /// </summary>
+    /// <returns><c>true</c>, якщо число непарне; інакше <c>false</c>.</returns>
     private bool IsOdd()
     {
         if (IsZero) return false;
         return (_digits[0] % 2 != 0);
     }
 
+    /// <summary>
+    /// Обчислює факторіал числа.
+    /// </summary>
+    /// <param name="n">Невід'ємне ціле число, для якого обчислюється факторіал.</param>
+    /// <returns>Факторіал числа <paramref name="n"/>.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">Виникає, якщо <paramref name="n"/> від'ємне або занадто велике.</exception>
     public static LongInteger Factorial(int n)
     {
         long iterations = 0;
